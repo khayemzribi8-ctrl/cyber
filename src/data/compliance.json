@@ -1,0 +1,45 @@
+{
+  "_comment": "Technical mapping of platform modules to representative controls across common frameworks. This is an assistive mapping to help evidence-gathering; it is NOT a formal certification and does not assert compliance with any standard.",
+  "frameworks": ["CIS", "NIST CSF", "NIST 800-53", "ISO 27001", "SOC 2"],
+  "controls": [
+    {"framework": "CIS", "control": "CIS Windows 1.1", "requirement": "Enforce a strong password policy (length, complexity, history).", "modules": ["password_policy_audit"]},
+    {"framework": "CIS", "control": "CIS Windows 1.2", "requirement": "Configure account lockout policy.", "modules": ["account_lockout_audit"]},
+    {"framework": "CIS", "control": "CIS Windows 2.2", "requirement": "Restrict user rights / privileged assignments.", "modules": ["windows_security_policy_audit", "privileged_account_audit", "local_administrator_audit"]},
+    {"framework": "CIS", "control": "CIS Windows 2.3", "requirement": "Harden network security: NTLM, LDAP & SMB signing.", "modules": ["ntlm_security_audit", "ldap_signing_audit", "smb_signing_audit", "smbv1_detection"]},
+    {"framework": "CIS", "control": "CIS Windows 9.x", "requirement": "Windows Defender Firewall enabled on all profiles.", "modules": ["windows_firewall_audit"]},
+    {"framework": "CIS", "control": "CIS Windows 17.x", "requirement": "Configure advanced audit policy / event logging.", "modules": ["windows_event_logging_audit"]},
+    {"framework": "CIS", "control": "CIS Windows 18.9", "requirement": "Disable legacy protocols and services (SMBv1, Spooler on DC).", "modules": ["smbv1_detection", "windows_services_audit", "domain_controller_security"]},
+    {"framework": "CIS", "control": "CIS Windows 19.x", "requirement": "PowerShell logging and endpoint protection enabled.", "modules": ["powershell_security_audit", "defender_controls_audit"]},
+    {"framework": "CIS", "control": "CIS Linux 5.2", "requirement": "Harden SSH server configuration.", "modules": ["ssh_security_audit"]},
+    {"framework": "CIS", "control": "CIS Linux 5.3", "requirement": "Restrict sudo access.", "modules": ["sudo_security_audit"]},
+
+    {"framework": "NIST CSF", "control": "PR.AC-1", "requirement": "Identities and credentials are managed for authorized devices/users.", "modules": ["user_account_security", "privileged_account_audit", "aws_iam_audit"]},
+    {"framework": "NIST CSF", "control": "PR.AC-4", "requirement": "Access permissions managed with least privilege.", "modules": ["group_membership_audit", "privileged_account_audit", "aws_iam_policy_audit", "certificate_permission_audit"]},
+    {"framework": "NIST CSF", "control": "PR.AC-7", "requirement": "Multi-factor authentication for users.", "modules": ["aws_mfa_audit"]},
+    {"framework": "NIST CSF", "control": "PR.PT-3", "requirement": "Least functionality: disable unnecessary services/exposure.", "modules": ["network_exposure_scanner", "remote_admin_exposure", "windows_services_audit", "linux_service_audit"]},
+    {"framework": "NIST CSF", "control": "DE.CM-1", "requirement": "Network monitored to detect potential events.", "modules": ["windows_event_logging_audit", "aws_cloudtrail_audit", "aws_security_monitoring"]},
+    {"framework": "NIST CSF", "control": "PR.DS-1", "requirement": "Data-at-rest is protected (encryption).", "modules": ["aws_s3_audit"]},
+    {"framework": "NIST 800-53", "control": "SC-7", "requirement": "Boundary Protection (restrict external exposure).", "modules": ["aws_security_group_audit", "network_exposure_scanner"]},
+    {"framework": "CIS", "control": "CIS AWS 2.x", "requirement": "Storage & logging: S3 not public/encrypted, CloudTrail enabled.", "modules": ["aws_s3_audit", "aws_cloudtrail_audit"]},
+    {"framework": "CIS", "control": "CIS AWS 5.x", "requirement": "Networking: no security group open to 0.0.0.0/0 on admin ports.", "modules": ["aws_security_group_audit"]},
+    {"framework": "NIST CSF", "control": "ID.RA-1", "requirement": "Asset vulnerabilities are identified and documented.", "modules": ["vulnerability_management", "config_vulnerability_detection", "adcs_security_audit"]},
+
+    {"framework": "NIST 800-53", "control": "AC-2", "requirement": "Account Management.", "modules": ["user_account_security", "active_directory_audit", "aws_access_key_audit"]},
+    {"framework": "NIST 800-53", "control": "AC-6", "requirement": "Least Privilege.", "modules": ["privileged_account_audit", "kerberos_security_audit", "aws_iam_policy_audit"]},
+    {"framework": "NIST 800-53", "control": "IA-2", "requirement": "Identification and Authentication (incl. MFA).", "modules": ["aws_mfa_audit", "ntlm_security_audit"]},
+    {"framework": "NIST 800-53", "control": "SC-8", "requirement": "Transmission Confidentiality and Integrity (signing/encryption).", "modules": ["ldap_signing_audit", "smb_signing_audit", "rdp_security_audit"]},
+    {"framework": "NIST 800-53", "control": "AU-2", "requirement": "Audit Events / logging.", "modules": ["windows_event_logging_audit", "aws_cloudtrail_audit"]},
+    {"framework": "NIST 800-53", "control": "SI-2", "requirement": "Flaw Remediation.", "modules": ["vulnerability_management", "smbv1_detection"]},
+
+    {"framework": "ISO 27001", "control": "A.9.2", "requirement": "User access management.", "modules": ["user_account_security", "privileged_account_audit"]},
+    {"framework": "ISO 27001", "control": "A.9.4", "requirement": "System and application access control.", "modules": ["group_membership_audit", "aws_iam_policy_audit", "certificate_permission_audit"]},
+    {"framework": "ISO 27001", "control": "A.10.1", "requirement": "Cryptographic controls (PKI/certificates).", "modules": ["adcs_security_audit", "certificate_authority_audit", "certificate_expiration_audit"]},
+    {"framework": "ISO 27001", "control": "A.12.4", "requirement": "Logging and monitoring.", "modules": ["windows_event_logging_audit", "aws_cloudtrail_audit"]},
+    {"framework": "ISO 27001", "control": "A.13.1", "requirement": "Network security management.", "modules": ["network_exposure_scanner", "windows_firewall_audit", "linux_firewall_audit"]},
+
+    {"framework": "SOC 2", "control": "CC6.1", "requirement": "Logical access security controls.", "modules": ["privileged_account_audit", "user_account_security", "aws_iam_audit"]},
+    {"framework": "SOC 2", "control": "CC6.6", "requirement": "Protect against external threats (exposure).", "modules": ["network_exposure_scanner", "remote_admin_exposure"]},
+    {"framework": "SOC 2", "control": "CC6.7", "requirement": "Restrict transmission / use of secure protocols.", "modules": ["smb_signing_audit", "ldap_signing_audit", "ssh_security_audit"]},
+    {"framework": "SOC 2", "control": "CC7.2", "requirement": "Monitoring of security events.", "modules": ["windows_event_logging_audit", "aws_security_monitoring"]}
+  ]
+}

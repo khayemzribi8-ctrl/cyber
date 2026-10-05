@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.env
+data/*.db
+data/*.db-*
+outputs/last_results.json
+report_*.html
+report_*.csv
+report_*.json

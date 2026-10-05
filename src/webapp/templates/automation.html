@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Automation{% endblock %}
+{% block heading %}Security Automation{% endblock %}
+{% block content %}
+<div class="grid g-2 mb">
+  <div class="panel pad">
+    <h3>Scheduled assessments</h3>
+    <p class="muted small">Automate recurring assessments with cron / Task Scheduler using the CLI:</p>
+    <pre class="code">
+# Daily full assessment at 02:00 (Linux cron)
+0 2 * * * cd /opt/sentinel && python src/main.py audit --all --target 10.0.0.10
+
+# Windows Task Scheduler (PowerShell)
+schtasks /Create /SC DAILY /TN "SentinelAudit" /TR "python C:\sentinel\src\main.py audit --all" /ST 02:00</pre>
+  </div>
+  <div class="panel pad">
+    <div class="flex between"><h3>Notifications (SNS)</h3>
+      {% if sns_on %}<span class="badge sev-OK"><span class="dot"></span>ENABLED</span>{% else %}<span class="chip">disabled</span>{% endif %}</div>
+    <p class="muted small">SNS alerts fire automatically after an audit that has <b>critical or high</b> findings — a genuine event, never spam. Configure in <code>.env</code>:</p>
+    <pre class="code">SNS_ENABLED=true
+SNS_TOPIC_ARN=arn:aws:sns:eu-west-1:123456789012:your-topic</pre>
+    {% if can('manage_settings') %}
+    <div class="flex mt">
+      <button class="btn sm primary" onclick="Sentinel.snsTest(this)">{{ icon('alert') }} Send test alert</button>
+      <span id="snsres" class="small muted"></span>
+    </div>
+    {% endif %}
+    <div class="notice warn small mt">Most common cause of "nothing arrives": the topic <b>subscription is not confirmed</b> (check the confirmation email and click the link), or the topic's region differs from your keys. The test button reports the exact error.</div>
+  </div>
+</div>
+<div class="panel">
+  <div class="panel-h"><h3>Collector availability</h3></div>
+  <div class="panel-b grid g-3">
+    {% for c in collectors %}
+    <div class="flex between" style="padding:6px 0">
+      <span>{{ c.label }} <span class="t-id">{{ c.key }}</span></span>
+      {% if c.available %}<span class="badge sev-OK"><span class="dot"></span>READY</span>{% else %}<span class="chip" title="{{ c.reason }}">unavailable</span>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

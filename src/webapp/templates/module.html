@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}{{ mod.name }}{% endblock %}
+{% block heading %}{{ mod.name }}{% endblock %}
+{% block crumb %}{{ mod.group }} · {% if mod.collector %}live collector: {{ mod.collector }}{% else %}planned module{% endif %}{% endblock %}
+{% block content %}
+
+<div class="panel pad mb">
+  <div class="flex between wrap">
+    <div style="max-width:70%">
+      <p>{{ mod.description }}</p>
+      <div class="mt">
+        {% if col_state == 'ready' %}<span class="badge sev-OK"><span class="dot"></span>COLLECTOR READY</span>
+          <span class="muted small">Runs on assessment; connection issues appear under Collector Diagnostics.</span>
+        {% elif col_state == 'aggregated' %}<span class="badge sev-OK"><span class="dot"></span>ACTIVE</span>
+          <span class="muted small">Populated by the audit engine.</span>
+        {% elif col_state == 'needs_library' %}<span class="chip">collector present · needs library: {{ col_reason }}</span>
+        {% else %}<span class="chip">PLANNED — data model &amp; UI ready, collector not yet implemented</span>{% endif %}
+      </div>
+    </div>
+    <div>
+      <div class="muted small">Typical ATT&amp;CK techniques</div>
+      {% for tid, name in techniques %}<div class="mt"><a class="tag" href="{{ url_for('ui.mitre_technique', tid=tid) }}">{{ tid }}</a> <span class="small muted">{{ name }}</span></div>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="grid g-2 mb">
+  <div class="panel">
+    <div class="panel-h"><h3>Checks performed</h3></div>
+    <div class="panel-b">
+      <ul style="margin:0;padding-left:18px">
+        {% for c in mod.checks %}<li style="padding:3px 0">{{ c }}</li>{% else %}<li class="muted">Check catalogue pending.</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-h"><h3>Result summary</h3></div>
+    <div class="panel-b grid g-3">
+      {% for k in ['CRITICAL','HIGH','MEDIUM','LOW'] %}
+      <div><div class="muted small">{{ k|capitalize }}</div><div style="font-size:22px;font-weight:700">{{ summary.get(k,0) }}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-h"><h3>Findings</h3><span class="muted small">{{ findings|length }} in this module</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Severity</th><th>Finding</th><th>Asset</th><th>MITRE</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for f in findings %}
+      <tr onclick="location.href='{{ url_for('ui.finding_detail', fid=f.id) }}'" style="cursor:pointer">
+        <td class="t-id">{{ f.id }}</td><td>{{ f.severity|sev }}</td><td>{{ f.title }}</td>
+        <td>{{ f.asset or '—' }}</td>
+        <td>{% for m in f.mitre[:2] %}<span class="tag">{{ m.technique_id }}</span> {% endfor %}</td>
+        <td>{{ f.status|status }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="empty">
+        {% if mod.collector %}No findings recorded for this module in the latest assessment. Run an assessment to populate it.
+        {% else %}This module is planned — no collector has produced findings yet. Results are never fabricated.{% endif %}
+      </td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

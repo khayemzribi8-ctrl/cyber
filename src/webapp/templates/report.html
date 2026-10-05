@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<title>Security Assessment Report — {{ d.audit.audit_id }}</title>
+<style>
+  body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1e293b;margin:0;padding:0;font-size:13px;line-height:1.5}
+  .page{max-width:900px;margin:0 auto;padding:40px}
+  h1{font-size:26px;color:#0f172a;margin:0 0 4px} h2{font-size:17px;color:#0f172a;border-bottom:2px solid #4f46e5;padding-bottom:6px;margin:28px 0 12px}
+  h3{font-size:14px;margin:16px 0 6px}
+  .cover{background:linear-gradient(135deg,#4f46e5,#2563eb);color:#fff;padding:38px;border-radius:14px;margin-bottom:12px}
+  .cover .muted{color:#e0e7ff}
+  .muted{color:#64748b} .small{font-size:11.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+  th{background:#f1f5f9;text-align:left;padding:7px 9px;border-bottom:1px solid #e2e8f0;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:#64748b}
+  td{padding:7px 9px;border-bottom:1px solid #eef2f7;vertical-align:top}
+  .kpis{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}
+  .kpi{flex:1;min-width:120px;border:1px solid #e2e8f0;border-radius:10px;padding:12px}
+  .kpi .l{font-size:10.5px;text-transform:uppercase;color:#64748b;font-weight:700}
+  .kpi .v{font-size:24px;font-weight:800;color:#0f172a}
+  .badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px}
+  .CRITICAL{background:#fef2f2;color:#991b1b}.HIGH{background:#fff7ed;color:#9a3412}
+  .MEDIUM{background:#fffbeb;color:#92400e}.LOW{background:#ecfeff;color:#155e75}
+  .INFO{background:#f1f5f9;color:#475569}.OK{background:#f0fdf4;color:#166534}
+  .tag{font-family:ui-monospace,monospace;font-size:10px;background:#eef2ff;color:#3730a3;padding:1px 6px;border-radius:5px}
+  .note{background:#fffbeb;border:1px dashed #fdba74;color:#7c2d12;padding:8px 12px;border-radius:8px;font-size:11.5px;margin:10px 0}
+  .foot{margin-top:30px;border-top:1px solid #e2e8f0;padding-top:12px;color:#94a3b8;font-size:11px}
+</style></head>
+<body><div class="page">
+  <div class="cover">
+    <div class="muted small">SENTINEL SECURITY ASSESSMENT PLATFORM</div>
+    <h1>Security Assessment Report</h1>
+    <div class="muted">Audit {{ d.audit.audit_id }} · {{ d.audit.finished_at }} · target {{ d.audit.target or 'N/A' }}</div>
+    {% if d.audit.demo %}<div style="margin-top:10px"><span class="badge" style="background:#fff;color:#7c2d12">DEMO DATA</span></div>{% endif %}
+  </div>
+
+  <h2>Executive Summary</h2>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Security Score</div><div class="v">{{ d.score.score }}/100 · {{ d.score.grade }}</div></div>
+    <div class="kpi"><div class="l">Critical</div><div class="v">{{ d.summary.get('CRITICAL',0) }}</div></div>
+    <div class="kpi"><div class="l">High</div><div class="v">{{ d.summary.get('HIGH',0) }}</div></div>
+    <div class="kpi"><div class="l">Medium</div><div class="v">{{ d.summary.get('MEDIUM',0) }}</div></div>
+    <div class="kpi"><div class="l">Assets</div><div class="v">{{ d.assets|length }}</div></div>
+  </div>
+  <h3>Score rationale</h3>
+  <table><tbody>
+    {% for b in d.score.breakdown %}<tr><td>{{ b.label }}</td><td style="text-align:right;color:{{ '#16a34a' if b.delta>=0 else '#dc2626' }}"><b>{{ '+' if b.delta>=0 else '' }}{{ b.delta }}</b></td></tr>{% endfor %}
+    <tr><td><b>Final score</b></td><td style="text-align:right"><b>{{ d.score.score }} / 100</b></td></tr>
+  </tbody></table>
+
+  <h2>Assets</h2>
+  <table><thead><tr><th>Host</th><th>Type</th><th>Open ports</th><th>Risk</th><th>Findings</th></tr></thead><tbody>
+    {% for a in d.assets %}<tr><td>{{ a.hostname }}</td><td>{{ a.asset_type }}</td><td class="small">{{ a.open_ports|join(', ') or '—' }}</td><td>{{ a.risk_score }}</td><td>{{ a.finding_count }}</td></tr>{% endfor %}
+  </tbody></table>
+
+  <h2>Critical &amp; High Findings</h2>
+  <table><thead><tr><th>Sev</th><th>Finding</th><th>Asset</th><th>MITRE</th></tr></thead><tbody>
+    {% for f in d.findings|sort(attribute='severity') if f.severity in ['CRITICAL','HIGH'] %}
+    <tr><td><span class="badge {{ f.severity }}">{{ f.severity }}</span></td><td>{{ f.title }}<div class="muted small">{{ f.description|truncate(120) }}</div></td><td>{{ f.asset or '—' }}</td><td>{% for m in f.mitre %}<span class="tag">{{ m.technique_id }}</span> {% endfor %}</td></tr>
+    {% else %}<tr><td colspan="4" class="muted">No critical or high findings.</td></tr>{% endfor %}
+  </tbody></table>
+
+  <h2>MITRE ATT&amp;CK Coverage</h2>
+  <p>{{ d.coverage.observed_count }} techniques observed across {{ d.coverage.tactic_count }} tactics ({{ d.coverage.coverage_pct }}% of the tracked matrix).</p>
+  <table><thead><tr><th>Technique</th><th>Name</th><th>Tactic</th><th>Findings</th></tr></thead><tbody>
+    {% for e in d.coverage.observed_techniques %}<tr><td><span class="tag">{{ e.id }}</span></td><td>{{ e.name }}</td><td class="small">{{ e.tactic }}</td><td>{{ e.findings }}</td></tr>{% endfor %}
+  </tbody></table>
+
+  <h2>Attack Paths</h2>
+  {% for p in d.attack_paths %}
+  <h3>{{ p.name }} <span class="muted small">({{ p.observed_stages }}/{{ p.total_stages }} observed)</span></h3>
+  <p class="small">{% for n in p.nodes %}{{ n.label }} <span class="tag">{{ n.technique }}</span> ({{ n.status }}){% if not loop.last %} → {% endif %}{% endfor %}</p>
+  {% else %}<p class="muted">No attack paths constructed.</p>{% endfor %}
+
+  <h2>Compliance Mapping</h2>
+  <div class="note">Assistive mapping only — does not assert formal certification.</div>
+  <table><thead><tr><th>Framework</th><th>Control</th><th>Status</th></tr></thead><tbody>
+    {% for c in d.compliance.controls if c.status != 'NOT ASSESSED' %}<tr><td>{{ c.framework }}</td><td>{{ c.control }} — <span class="muted small">{{ c.requirement }}</span></td><td>{{ c.status }}</td></tr>{% endfor %}
+  </tbody></table>
+
+  <h2>Remediation Plan</h2>
+  <table><thead><tr><th>Sev</th><th>Finding</th><th>Recommended fix</th></tr></thead><tbody>
+    {% for f in d.findings|sort(attribute='severity') if f.severity in ['CRITICAL','HIGH','MEDIUM'] and f.remediation %}
+    <tr><td><span class="badge {{ f.severity }}">{{ f.severity }}</span></td><td>{{ f.title }}</td><td class="small">{{ (f.remediation.fix_description or f.remediation.summary)|truncate(160) }}</td></tr>{% endfor %}
+  </tbody></table>
+
+  <div class="foot">Generated by Sentinel Security Assessment Platform · {{ now().strftime('%Y-%m-%d %H:%M') }} · This report reflects automated checks and assistive mappings; it is not a formal certification or penetration test attestation.</div>
+</div></body></html>

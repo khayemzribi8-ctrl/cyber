@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- HEADER -->
+<div class="bg-white p-4 sm:p-6 rounded-lg shadow mb-6">
+    <h2 class="text-2xl sm:text-3xl font-semibold flex items-center gap-2">
+        📄 Détails de l’audit
+    </h2>
+    <p class="text-gray-600 text-sm sm:text-base">
+        Visualisez le rapport complet de l’audit exécuté.
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-3 mt-4">
+        <a
+          href="/history/{{ audit.audit_id }}/export/csv"
+          class="w-full sm:w-auto text-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+        >
+            📥 Télécharger CSV
+        </a>
+
+        <a
+          href="/history/{{ audit.audit_id }}/export/html"
+          class="w-full sm:w-auto text-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+        >
+            📄 Télécharger Rapport HTML
+        </a>
+    </div>
+</div>
+
+<!-- SUMMARY CARD -->
+<div class="bg-white p-4 sm:p-5 rounded-xl shadow mb-8 border border-gray-200">
+    <h3 class="text-lg sm:text-xl font-bold mb-3 flex items-center gap-2">
+        📊 Résumé global
+    </h3>
+
+    <div class="flex flex-wrap gap-2">
+        <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs sm:text-sm font-semibold">
+            ✔ OK: {{ audit.summary.OK }}
+        </span>
+        <span class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs sm:text-sm font-semibold">
+            ⚠ WARN: {{ audit.summary.WARN }}
+        </span>
+        <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs sm:text-sm font-semibold">
+            ❌ CRIT: {{ audit.summary.CRIT }}
+        </span>
+        <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs sm:text-sm font-semibold">
+            ℹ INFO: {{ audit.summary.INFO }}
+        </span>
+    </div>
+</div>
+
+<!-- FILTERS -->
+<div class="bg-white p-4 sm:p-5 rounded-xl shadow mb-6 border border-gray-200">
+    <h3 class="text-lg sm:text-xl font-semibold mb-3">
+        🔎 Filtrer les résultats
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <select id="filter-category" class="p-2 border rounded text-sm sm:text-base">
+            <option value="ALL">Toutes catégories</option>
+            <option value="LDAP">LDAP</option>
+            <option value="SSH">SSH</option>
+            <option value="AD">Active Directory</option>
+            <option value="PrivEsc">Privilege Escalation</option>
+            <option value="Token">Token / Kerberos</option>
+            <option value="ACL">ACL</option>
+            <option value="Potato">Potato</option>
+            <option value="AWS">AWS IAM</option>
+        </select>
+
+        <input
+          id="search-box"
+          type="text"
+          placeholder="Rechercher une vulnérabilité..."
+          class="p-2 border rounded text-sm sm:text-base"
+        />
+    </div>
+</div>
+
+<!-- TABLE SECTION -->
+<div class="bg-white p-4 sm:p-5 rounded-xl shadow mb-10 border border-gray-200">
+    <h3 class="text-lg sm:text-xl font-semibold mb-4">
+        📁 Résultats détaillés
+    </h3>
+
+    <!-- Mobile scroll wrapper -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-left border rounded overflow-hidden text-sm sm:text-base" id="audit-table">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="p-3 whitespace-nowrap">Service</th>
+                    <th class="p-3 whitespace-nowrap">Check</th>
+                    <th class="p-3 whitespace-nowrap">Result</th>
+                    <th class="p-3 whitespace-nowrap">Severity</th>
+                </tr>
+            </thead>
+
+            <tbody class="divide-y" id="results-body">
+                {% for category, items in audit.all_data.items() %}
+                    {% for row in items %}
+                    <tr class="row" data-category="{{ category|upper }}">
+                        <td class="p-3 font-semibold">{{ category }}</td>
+                        <td class="p-3">{{ row.check }}</td>
+                        <td class="p-3">{{ row.result }}</td>
+                        <td class="p-3">
+                            {% if row.severity == "CRIT" %}
+                                <span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs sm:text-sm">CRITIQUE</span>
+                            {% elif row.severity == "WARN" %}
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs sm:text-sm">WARN</span>
+                            {% elif row.severity == "INFO" %}
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs sm:text-sm">INFO</span>
+                            {% else %}
+                                <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs sm:text-sm">OK</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- JAVASCRIPT FILTERS (UNCHANGED) -->
+<script>
+const categoryFilter = document.getElementById("filter-category");
+const searchBox = document.getElementById("search-box");
+const rows = document.querySelectorAll("#results-body .row");
+
+function applyFilters() {
+    const category = categoryFilter.value;
+    const search = searchBox.value.toLowerCase();
+
+    rows.forEach(row => {
+        const rowCat = row.dataset.category;
+        const text = row.innerText.toLowerCase();
+
+        const matchCategory = (category === "ALL" || category === rowCat);
+        const matchText = text.includes(search);
+
+        row.style.display = (matchCategory && matchText) ? "" : "none";
+    });
+}
+
+categoryFilter.addEventListener("change", applyFilters);
+searchBox.addEventListener("keyup", applyFilters);
+</script>
+
+{% endblock %}
+    

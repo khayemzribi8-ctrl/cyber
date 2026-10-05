@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block heading %}Security Reports{% endblock %}
+{% block content %}
+{% if d.has_data %}
+<div class="panel pad mb">
+  <div class="flex between wrap">
+    <div><h3>Latest assessment report</h3><div class="muted small">{{ d.audit.finished_at|dt }} · score {{ d.score.score }} ({{ d.score.grade }}) · {{ d.summary.TOTAL }} findings</div></div>
+    <div class="flex">
+      <a class="btn" href="{{ url_for('ui.report_export', audit_id=d.audit.audit_id, fmt='html') }}">{{ icon('download') }} HTML</a>
+      <a class="btn" href="{{ url_for('ui.report_export', audit_id=d.audit.audit_id, fmt='csv') }}">{{ icon('download') }} CSV</a>
+      <a class="btn" href="{{ url_for('ui.report_export', audit_id=d.audit.audit_id, fmt='json') }}">{{ icon('download') }} JSON</a>
+      <a class="btn" href="{{ url_for('ui.report_export', audit_id=d.audit.audit_id, fmt='pdf') }}">{{ icon('download') }} PDF</a>
+    </div>
+  </div>
+</div>
+{% endif %}
+<div class="panel">
+  <div class="panel-h"><h3>All assessments</h3></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Audit ID</th><th>Date</th><th>Target</th><th>Score</th><th>Findings</th><th>Modules</th><th>Export</th></tr></thead>
+    <tbody>
+    {% for a in audits %}
+      <tr>
+        <td class="t-id">{{ a.audit_id }}{% if a.demo %} <span class="demo-flag">DEMO</span>{% endif %}</td>
+        <td class="small">{{ a.finished_at|dt }}</td>
+        <td>{{ a.target or '—' }}</td>
+        <td><b>{{ a.security_score }}</b></td>
+        <td>{{ a.summary.get('TOTAL',0) }}</td>
+        <td class="small muted">{{ a.modules_used|length }}</td>
+        <td class="flex">
+          <a class="btn sm" href="{{ url_for('ui.report_export', audit_id=a.audit_id, fmt='html') }}">HTML</a>
+          <a class="btn sm" href="{{ url_for('ui.report_export', audit_id=a.audit_id, fmt='csv') }}">CSV</a>
+          <a class="btn sm" href="{{ url_for('ui.report_export', audit_id=a.audit_id, fmt='json') }}">JSON</a>
+        </td>
+      </tr>
+    {% else %}<tr><td colspan="7" class="empty">No assessments recorded.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

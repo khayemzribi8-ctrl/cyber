@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Compliance{% endblock %}
+{% block heading %}Compliance Mapping{% endblock %}
+{% block crumb %}Assistive control mapping — not a formal certification{% endblock %}
+{% block content %}
+<div class="notice mb">These mappings correlate findings to representative controls to speed up evidence gathering. They do <b>not</b> assert or claim formal compliance/certification with any standard.</div>
+
+<div class="grid g-4 mb">
+  {% for name, r in d.compliance.frameworks.items() %}
+  <div class="kpi">
+    <div class="label">{{ name }}</div>
+    <div class="val">{{ r.pass_pct }}%</div>
+    <div class="sub">{{ r.assessed }}/{{ r.total }} assessed · {{ r.FAIL }} failing</div>
+    <div class="meter mt"><span style="width:{{ r.pass_pct }}%;background:{{ '#16a34a' if r.pass_pct>=75 else ('#d97706' if r.pass_pct>=40 else '#dc2626') }}"></span></div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="pill-nav mb">
+  <a class="{{ 'active' if not fw }}" href="{{ url_for('ui.compliance') }}">All</a>
+  {% for name in d.compliance.frameworks.keys() %}
+  <a class="{{ 'active' if fw==name }}" href="{{ url_for('ui.compliance', framework=name) }}">{{ name }}</a>
+  {% endfor %}
+</div>
+
+<div class="panel">
+  <div class="table-wrap"><table>
+    <thead><tr><th>Framework</th><th>Control</th><th>Requirement</th><th>Status</th><th>Findings</th></tr></thead>
+    <tbody>
+    {% for c in controls %}
+      <tr>
+        <td class="small muted">{{ c.framework }}</td>
+        <td><b>{{ c.control }}</b></td>
+        <td class="small">{{ c.requirement }}</td>
+        <td>
+          {% if c.status=='PASS' %}<span class="badge sev-OK"><span class="dot"></span>PASS</span>
+          {% elif c.status=='FAIL' %}<span class="badge sev-CRITICAL"><span class="dot"></span>FAIL</span>
+          {% elif c.status=='PARTIAL' %}<span class="badge sev-MEDIUM"><span class="dot"></span>PARTIAL</span>
+          {% else %}<span class="chip">NOT ASSESSED</span>{% endif %}
+        </td>
+        <td>{{ c.finding_count }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

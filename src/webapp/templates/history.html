@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Audit History{% endblock %}
+{% block heading %}Audit History{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="table-wrap"><table>
+    <thead><tr><th>Audit ID</th><th>Started</th><th>Finished</th><th>Target</th><th>Score</th><th>Crit</th><th>High</th><th>Findings</th><th>By</th></tr></thead>
+    <tbody>
+    {% for a in audits %}
+      <tr onclick="location.href='{{ url_for('ui.history_detail', audit_id=a.audit_id) }}'" style="cursor:pointer">
+        <td class="t-id">{{ a.audit_id }}{% if a.demo %} <span class="demo-flag">DEMO</span>{% endif %}</td>
+        <td class="small">{{ a.started_at|dt }}</td>
+        <td class="small">{{ a.finished_at|dt }}</td>
+        <td>{{ a.target or '—' }}</td>
+        <td><b>{{ a.security_score }}</b></td>
+        <td>{{ a.summary.get('CRITICAL',0) }}</td>
+        <td>{{ a.summary.get('HIGH',0) }}</td>
+        <td>{{ a.summary.get('TOTAL',0) }}</td>
+        <td class="small muted">{{ a.triggered_by }}</td>
+      </tr>
+    {% else %}<tr><td colspan="9" class="empty">No audits yet.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block heading %}Settings{% endblock %}
+{% block content %}
+<div class="grid g-2 mb">
+  <div class="panel">
+    <div class="panel-h"><h3>Role-Based Access Control</h3></div>
+    <div class="panel-b">
+      <p class="muted small">Your role: <b>{{ current_role }}</b>. Capabilities by role:</p>
+      <table>
+        <thead><tr><th>Capability</th><th>ADMIN</th><th>ANALYST</th><th>AUDITOR</th><th>VIEWER</th></tr></thead>
+        <tbody>
+          {% set caps = [('View dashboards','✓','✓','✓','✓'),('Run assessments','✓','✓','✓','—'),('Change finding status','✓','✓','✓','—'),('Preview remediation','✓','✓','—','—'),('Execute remediation','✓','—','—','—'),('Manage users/settings','✓','—','—','—')] %}
+          {% for c in caps %}<tr><td>{{ c[0] }}</td><td>{{ c[1] }}</td><td>{{ c[2] }}</td><td>{{ c[3] }}</td><td>{{ c[4] }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-h"><h3>Integrations</h3></div>
+    <div class="panel-b">
+      {% for c in collectors %}
+      <div class="flex between" style="padding:5px 0;border-bottom:1px solid var(--border)">
+        <span>{{ c.label }}</span>
+        {% if c.available %}<span class="badge sev-OK"><span class="dot"></span>READY</span>{% else %}<span class="chip">{{ c.reason }}</span>{% endif %}
+      </div>
+      {% endfor %}
+      <p class="muted small mt">AWS, DynamoDB, CloudWatch and SNS are optional and disabled by default. The platform runs fully offline.</p>
+    </div>
+  </div>
+</div>
+
+{% if can('manage_users') %}
+<div class="panel mb">
+  <div class="panel-h"><h3>Users</h3></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Username</th><th>Role</th><th>Created</th><th>Last login</th></tr></thead>
+    <tbody>{% for u in users %}<tr><td><b>{{ u.username }}</b></td><td><span class="chip">{{ u.role }}</span></td><td class="small muted">{{ u.created_at|dt }}</td><td class="small muted">{{ u.last_login|dt }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endif %}
+
+<div class="panel">
+  <div class="panel-h"><h3>Audit Log</h3><span class="muted small">security-relevant actions</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Detail</th><th>IP</th></tr></thead>
+    <tbody>
+    {% for l in logs %}<tr><td class="small">{{ l.ts|dt }}</td><td>{{ l.actor }}</td><td><span class="chip">{{ l.action }}</span></td><td class="small muted">{{ l.detail }}</td><td class="small mono">{{ l.ip }}</td></tr>
+    {% else %}<tr><td colspan="5" class="empty">No log entries.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

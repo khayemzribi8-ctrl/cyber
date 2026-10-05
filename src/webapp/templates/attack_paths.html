@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Attack Paths{% endblock %}
+{% block heading %}Attack Path Analysis{% endblock %}
+{% block crumb %}{{ paths|length }} evidence-linked paths{% endblock %}
+{% block content %}
+<div class="notice mb">Paths are only shown when their entry condition is backed by a real finding. Each node is labelled <b class="cf observed">observed</b>, <b class="cf potential">potential</b> or <b class="cf inferred">inferred</b> so exploitability is never overstated.</div>
+
+{% for p in paths %}
+<div class="path">
+  <div class="flex between mb">
+    <h3>{{ p.name }}</h3>
+    <span class="chip">{{ p.observed_stages }}/{{ p.total_stages }} stages observed · max {{ p.max_severity }}</span>
+  </div>
+  <div class="flow">
+    {% for n in p.nodes %}
+      <div class="node {{ n.status }}">
+        <div class="tac">{{ n.tactic }}</div>
+        <div class="lbl">{{ n.label }}</div>
+        <div class="flex between">
+          <span class="cf {{ n.status }}">{{ n.status }}</span>
+          <a class="tag" href="{{ url_for('ui.mitre_technique', tid=n.technique) }}">{{ n.technique }}</a>
+        </div>
+        {% if n.evidence %}<div class="muted small mt">{% for e in n.evidence[:2] %}<a href="{{ url_for('ui.finding_detail', fid=e.id) }}">{{ e.title|truncate(28) }}</a><br>{% endfor %}</div>{% endif %}
+      </div>
+      {% if not loop.last %}<div class="arrow">→</div>{% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="panel pad empty"><div class="ico" style="display:flex;justify-content:center">{{ icon('route') }}</div>
+  <p>No attack paths could be constructed from current findings.</p></div>
+{% endfor %}
+{% endblock %}

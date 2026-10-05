@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Security Audit Report</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 2rem; }
+      h1 { margin-bottom: 0; }
+      small { color: #666; }
+      .severity-OK { color: #2e7d32; }
+      .severity-WARN { color: #f57c00; }
+      .severity-CRIT { color: #c62828; font-weight: bold; }
+      table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+      th, td { border: 1px solid #ddd; padding: 8px; }
+      th { background: #f5f5f5; text-align: left; }
+      code { background: #f0f0f0; padding: 2px 4px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <h1>Security Audit Report</h1>
+    <small>Generated at 2025-11-13T19:40:35.433417Z</small>
+
+    
+  <h2>SSH Findings</h2>
+  
+    <table>
+      <thead>
+        <tr>
+          <th>Check</th><th>Result</th><th>Severity</th><th>Recommendation</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+          <tr>
+            <td>PermitRootLogin</td>
+            <td>prohibit-password</td>
+            <td class="severity-OK">OK</td>
+            <td>Set 'PermitRootLogin no' to disable remote root login.</td>
+          </tr>
+        
+          <tr>
+            <td>PasswordAuthentication</td>
+            <td>yes</td>
+            <td class="severity-WARN">WARN</td>
+            <td>Disable password authentication; use key-based authentication.</td>
+          </tr>
+        
+          <tr>
+            <td>SSH Protocol Version</td>
+            <td>2</td>
+            <td class="severity-OK">OK</td>
+            <td>Use Protocol 2 only.</td>
+          </tr>
+        
+          <tr>
+            <td>Login Banner (User: Bob)</td>
+            <td>C:\ProgramData\ssh\login_banner.txt</td>
+            <td class="severity-OK">OK</td>
+            <td>Personalized banner configured for user 'Bob'.</td>
+          </tr>
+        
+      </tbody>
+    </table>
+  
+
+
+  </body>
+</html>

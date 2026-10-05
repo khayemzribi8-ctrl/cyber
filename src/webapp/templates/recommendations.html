@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- HEADER -->
+<div class="bg-white p-6 rounded-2xl shadow-lg mb-8">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+      <h2 class="text-3xl font-bold flex items-center gap-3">
+        Vulnérabilités & Correctifs
+      </h2>
+      <p class="text-gray-600 text-lg mt-2">
+        Analysez, filtrez et corrigez les vulnérabilités détectées.
+      </p>
+    </div>
+
+    <!-- QUICK STATS -->
+    <div class="flex flex-wrap gap-3">
+      <span class="px-4 py-2 bg-red-100 text-red-700 rounded-xl text-sm font-bold">
+        CRIT ({{ summary.CRIT|default(0) }})
+      </span>
+      <span class="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-xl text-sm font-bold">
+        WARN ({{ summary.WARN|default(0) }})
+      </span>
+      <span class="px-4 py-2 bg-blue-100 text-blue-700 rounded-xl text-sm font-bold">
+        INFO ({{ summary.INFO|default(0) }})
+      </span>
+    </div>
+  </div>
+</div>
+
+{% if recommendations|length == 0 %}
+<div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 p-6 rounded-xl mb-8">
+  <p class="text-lg font-medium">
+    Aucune recommandation détectée.<br>
+    <span class="block mt-2 text-base">Lancez un audit pour voir les correctifs possibles.</span>
+  </p>
+</div>
+{% endif %}
+
+<!-- TOOLBAR -->
+<div class="flex flex-col lg:flex-row justify-between items-stretch gap-4 mb-6">
+  <input id="searchInput"
+         type="text"
+         placeholder="Rechercher par nom, service, utilisateur..."
+         class="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-200 focus:outline-none text-base"/>
+
+  <div class="flex flex-wrap gap-3 justify-center lg:justify-end">
+    <button onclick="filterSeverity('CRIT')" class="px-5 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition">
+      CRIT
+    </button>
+    <button onclick="filterSeverity('WARN')" class="px-5 py-3 bg-yellow-500 text-white rounded-xl font-bold hover:bg-yellow-600 transition">
+      WARN
+    </button>
+    <button onclick="filterSeverity('INFO')" class="px-5 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition">
+      INFO
+    </button>
+    <button onclick="filterSeverity('ALL')" class="px-5 py-3 bg-gray-600 text-white rounded-xl font-bold hover:bg-gray-700 transition">
+      TOUT
+    </button>
+  </div>
+</div>
+
+<!-- RECOMMENDATIONS LIST (CARDS ON MOBILE, TABLE ON DESKTOP) -->
+<form id="fixForm" onsubmit="sendFixes(event)">
+  <!-- Desktop: Table View -->
+  <div class="hidden lg:block overflow-x-auto bg-white rounded-2xl shadow-lg">
+    <table class="min-w-full text-left text-gray-800" id="vulnTableDesktop">
+      <thead class="bg-gray-100 text-sm uppercase font-bold">
+        <tr>
+          <th class="p-4 w-12 text-center">
+            <input type="checkbox" onclick="toggleAll(this)" class="w-5 h-5 rounded" />
+          </th>
+          <th class="p-4">Service</th>
+          <th class="p-4">Vulnérabilité</th>
+          <th class="p-4">Gravité</th>
+          <th class="p-4">Affecte</th>
+          <th class="p-4">Correctif</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rec in recommendations %}
+        <tr class="border-b hover:bg-gray-50 vuln-row" data-sev="{{ rec.severity }}" data-search="{{ rec.name|lower }} {{ rec.service|lower }} {{ rec.affected|map('lower')|join(' ') }}">
+          <td class="p-4 text-center">
+            {% if rec.command_template %}
+            <input type="checkbox" class="row-check w-5 h-5 rounded" value="{{ loop.index0 }}" data-title="{{ rec.name }} ({{ rec.service }})"/>
+            {% else %}
+            <input type="checkbox" disabled class="opacity-40"/>
+            {% endif %}
+          </td>
+          <td class="p-4">
+            <span class="px-3 py-1 bg-purple-600 text-white rounded-lg text-sm font-medium">{{ rec.service }}</span>
+          </td>
+          <td class="p-4 font-semibold">{{ rec.name }}</td>
+          <td class="p-4">
+            <span class="px-3 py-1 rounded text-white text-sm font-bold
+              {% if rec.severity == 'CRIT' %}bg-red-600
+              {% elif rec.severity == 'WARN' %}bg-yellow-500
+              {% elif rec.severity == 'INFO' %}bg-blue-600
+              {% else %}bg-green-600{% endif %}">
+              {{ rec.severity }}
+            </span>
+          </td>
+          <td class="p-4">
+            {% for item in rec.affected %}
+            <span class="inline-block px-3 py-1 bg-gray-200 rounded text-xs mr-1 mb-1">{{ item }}</span>
+            {% endfor %}
+          </td>
+          <td class="p-4">
+            {% if rec.command_template %}
+            <details class="cursor-pointer">
+              <summary class="text-blue-600 hover:underline text-sm font-medium">Voir commande →</summary>
+              <pre class="mt-3 bg-gray-900 text-green-300 p-4 rounded-lg text-xs overflow-x-auto">{{ rec.command_template }}</pre>
+            </details>
+            {% else %}
+            <span class="text-gray-500 italic text-sm">Aucun correctif automatique</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile: Card View -->
+  <div class="lg:hidden space-y-6">
+    {% for rec in recommendations %}
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 vuln-row"
+         data-sev="{{ rec.severity }}"
+         data-search="{{ rec.name|lower }} {{ rec.service|lower }} {{ rec.affected|map('lower')|join(' ') }}">
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex items-center gap-3">
+          {% if rec.command_template %}
+          <input type="checkbox" class="row-check w-6 h-6 rounded mt-1" value="{{ loop.index0 }}" data-title="{{ rec.name }} ({{ rec.service }})"/>
+          {% else %}
+          <input type="checkbox" disabled class="opacity-40 mt-1"/>
+          {% endif %}
+          <div>
+            <div class="font-bold text-lg">{{ rec.name }}</div>
+            <span class="inline-block px-3 py-1 bg-purple-600 text-white rounded-lg text-xs font-medium mt-1">{{ rec.service }}</span>
+          </div>
+        </div>
+        <span class="px-4 py-2 rounded-xl text-white font-bold text-sm
+          {% if rec.severity == 'CRIT' %}bg-red-600
+          {% elif rec.severity == 'WARN' %}bg-yellow-500
+          {% elif rec.severity == 'INFO' %}bg-blue-600
+          {% else %}bg-green-600{% endif %}">
+          {{ rec.severity }}
+        </span>
+      </div>
+
+      {% if rec.affected %}
+      <div class="mb-4">
+        <p class="text-sm text-gray-600 font-medium mb-2">Affecte :</p>
+        <div class="flex flex-wrap gap-2">
+          {% for item in rec.affected %}
+          <span class="px-3 py-1 bg-gray-200 rounded-lg text-xs">{{ item }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div>
+        {% if rec.command_template %}
+        <details class="cursor-pointer">
+          <summary class="text-blue-600 font-medium hover:underline">Voir le correctif PowerShell →</summary>
+          <pre class="mt-3 bg-gray-900 text-green-300 p-4 rounded-lg text-xs overflow-x-auto">{{ rec.command_template }}</pre>
+        </details>
+        {% else %}
+        <p class="text-gray-500 italic">Aucun correctif automatique disponible</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- ACTION BAR -->
+  <div class="flex flex-col sm:flex-row justify-between items-center mt-8 gap-4">
+    <p class="text-gray-600 text-center sm:text-left">
+      <span class="font-medium">{{ checked_count|default(0) }}</span> correctif(s) sélectionné(s)
+    </p>
+
+    <button type="submit"
+            class="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white font-bold text-lg rounded-xl hover:bg-blue-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            {% if recommendations|length == 0 %}disabled{% endif %}>
+      Appliquer les correctifs sélectionnés
+    </button>
+  </div>
+</form>
+
+<!-- EXECUTION CONSOLE -->
+<div id="resultsBox" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col p-4">
+  <div class="bg-gray-900 rounded-2xl shadow-2xl flex-1 flex flex-col max-w-4xl mx-auto w-full mt-16">
+    <div class="flex justify-between items-center p-6 border-b border-gray-700">
+      <h3 class="text-2xl font-bold">Console d’exécution</h3>
+      <button id="closeConsole" class="text-3xl text-gray-400 hover:text-white">&times;</button>
+    </div>
+    <div id="resultsContent" class="flex-1 p-6 overflow-y-auto text-sm space-y-4"></div>
+  </div>
+</div>
+
+<!-- JAVASCRIPT (inchangé mais optimisé) -->
+<script>
+function toggleAll(source) {
+  document.querySelectorAll(".row-check:not(:disabled)").forEach(cb => cb.checked = source.checked);
+  updateCheckedCount();
+}
+
+function filterSeverity(sev) {
+  document.querySelectorAll(".vuln-row").forEach(row => {
+    row.style.display = (sev === "ALL" || row.dataset.sev === sev) ? "" : "none";
+  });
+}
+
+document.getElementById("searchInput").addEventListener("input", function () {
+  const val = this.value.toLowerCase();
+  document.querySelectorAll(".vuln-row").forEach(row => {
+    row.style.display = row.dataset.search.includes(val) ? "" : "none";
+  });
+});
+
+function updateCheckedCount() {
+  const count = document.querySelectorAll(".row-check:checked").length;
+  document.querySelector(".text-gray-600").innerHTML = 
+    count === 0 
+      ? "Sélectionnez les vulnérabilités à corriger." 
+      : `<span class="font-medium">${count}</span> correctif(s) sélectionné(s)`;
+}
+
+document.getElementById("closeConsole")?.addEventListener("click", () => {
+  document.getElementById("resultsBox").classList.add("hidden");
+});
+
+async function sendFixes(e) {
+  e.preventDefault();
+  const checked = document.querySelectorAll(".row-check:checked");
+  if (checked.length === 0) return alert("Veuillez sélectionner au moins un correctif.");
+
+  const ids = Array.from(checked).map(cb => parseInt(cb.value));
+  const titles = Array.from(checked).map(cb => cb.dataset.title);
+
+  const box = document.getElementById("resultsBox");
+  const content = document.getElementById("resultsContent");
+  box.classList.remove("hidden");
+  content.innerHTML = "<pre class='text-gray-400 p-4'>Connexion et exécution en cours...</pre>";
+
+  try {
+    const response = await fetch("/execute-multiple-fixes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids })
+    });
+
+    const data = await response.json();
+    content.innerHTML = "";
+
+    if (!data.success) {
+      content.innerHTML += `<pre class="bg-red-900 text-red-300 p-4 rounded">Erreur globale: ${data.message}</pre>`;
+      return;
+    }
+
+    data.results.forEach(result => {
+      const title = titles[ids.indexOf(result.id)] || "Correctif inconnu";
+      const line = document.createElement("pre");
+      line.className = result.success ? "bg-green-900 text-green-300 p-4 rounded" : "bg-red-900 text-red-300 p-4 rounded";
+      line.textContent = result.success ? `✔ ${title}\n${result.message || "Succès"}` : `✖ ${title}\n${result.message || "Échec"}`;
+      content.appendChild(line);
+    });
+
+    const summary = document.createElement("pre");
+    summary.className = "mt-6 p-6 bg-gray-800 rounded-xl text-yellow-300 font-bold text-center text-lg";
+    summary.textContent = `Récapitulatif : ${data.summary.successful} succès / ${data.summary.failed} échecs`;
+    content.appendChild(summary);
+
+    document.querySelectorAll(".row-check:checked").forEach(cb => cb.checked = false);
+    updateCheckedCount();
+
+  } catch (err) {
+    content.innerHTML = `<pre class="bg-red-900 text-red-300 p-4 rounded">Erreur réseau : ${err.message}</pre>`;
+  }
+
+  content.scrollTop = content.scrollHeight;
+}
+
+// Init
+updateCheckedCount();
+</script>
+
+{% endblock %}

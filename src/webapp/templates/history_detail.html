@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Audit {{ d.audit.audit_id }}{% endblock %}
+{% block heading %}Audit {{ d.audit.audit_id }}{% endblock %}
+{% block crumb %}{{ d.audit.finished_at|dt }} · target {{ d.audit.target or '—' }} · by {{ d.audit.triggered_by }}{% endblock %}
+{% block content %}
+<div class="grid g-4 mb">
+  <div class="kpi accent"><div class="label">Score</div><div class="val">{{ d.score.score }} <span class="grade">{{ d.score.grade }}</span></div></div>
+  <div class="kpi crit"><div class="label">Critical</div><div class="val">{{ d.summary.get('CRITICAL',0) }}</div></div>
+  <div class="kpi high"><div class="label">High</div><div class="val">{{ d.summary.get('HIGH',0) }}</div></div>
+  <div class="kpi"><div class="label">Total findings</div><div class="val">{{ d.summary.TOTAL }}</div></div>
+</div>
+<div class="flex mb">
+  <a class="btn" href="{{ url_for('ui.report_export', audit_id=d.audit.audit_id, fmt='html') }}">{{ icon('download') }} HTML</a>
+  <a class="btn" href="{{ url_for('ui.report_export', audit_id=d.audit.audit_id, fmt='csv') }}">{{ icon('download') }} CSV</a>
+  <a class="btn" href="{{ url_for('ui.report_export', audit_id=d.audit.audit_id, fmt='json') }}">{{ icon('download') }} JSON</a>
+</div>
+<div class="panel">
+  <div class="panel-h"><h3>Findings in this audit</h3></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Severity</th><th>Finding</th><th>Asset</th><th>Module</th><th>MITRE</th></tr></thead>
+    <tbody>
+    {% for f in d.findings|sort(attribute='severity') %}
+      <tr onclick="location.href='{{ url_for('ui.finding_detail', fid=f.id) }}'" style="cursor:pointer">
+        <td class="t-id">{{ f.id }}</td><td>{{ f.severity|sev }}</td><td>{{ f.title }}</td>
+        <td>{{ f.asset or '—' }}</td><td class="small muted">{{ f.module }}</td>
+        <td>{% for m in f.mitre[:2] %}<span class="tag">{{ m.technique_id }}</span> {% endfor %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

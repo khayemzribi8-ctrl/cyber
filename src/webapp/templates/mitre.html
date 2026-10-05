@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}MITRE ATT&CK{% endblock %}
+{% block heading %}MITRE ATT&CK Coverage{% endblock %}
+{% block crumb %}{{ coverage.observed_count }} techniques observed · {{ coverage.coverage_pct }}% of tracked matrix{% endblock %}
+{% block content %}
+
+<div class="grid g-4 mb">
+  <div class="kpi accent"><div class="label">Tactics</div><div class="val">{{ coverage.tactic_count }}</div></div>
+  <div class="kpi"><div class="label">Techniques tracked</div><div class="val">{{ coverage.total_techniques }}</div></div>
+  <div class="kpi ok"><div class="label">Observed</div><div class="val">{{ coverage.observed_count }}</div></div>
+  <div class="kpi"><div class="label">Coverage</div><div class="val">{{ coverage.coverage_pct }}%</div></div>
+</div>
+
+<div class="panel mb">
+  <div class="panel-h"><h3>ATT&amp;CK Matrix</h3><span class="muted small">columns are tactics · highlighted cells are observed in findings</span></div>
+  <div class="panel-b">
+    <div class="matrix">
+      {% for t in coverage.tactics %}
+      <div class="col">
+        <div class="head">{{ t.name }}<span class="cnt">{{ t.observed_count }}/{{ t.technique_count }} · {{ t.finding_count }} find.</span></div>
+        {% for tech in t.techniques %}
+          {% if tech.observed %}
+          <a class="cell obs s-{{ tech.max_severity }}" href="{{ url_for('ui.mitre_technique', tid=tech.id) }}" title="{{ tech.name }}">
+            <span class="tid">{{ tech.id }}</span>{{ tech.name|truncate(26) }} ({{ tech.findings }})
+          </a>
+          {% else %}
+          <a class="cell" href="{{ url_for('ui.mitre_technique', tid=tech.id) }}" title="{{ tech.name }}">
+            <span class="tid">{{ tech.id }}</span>{{ tech.name|truncate(26) }}
+          </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-h"><h3>Observed techniques</h3></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Technique</th><th>Name</th><th>Tactic</th><th>Findings</th><th>Assets</th><th>Highest</th></tr></thead>
+    <tbody>
+    {% for e in coverage.observed_techniques %}
+      <tr onclick="location.href='{{ url_for('ui.mitre_technique', tid=e.id) }}'" style="cursor:pointer">
+        <td><span class="tag">{{ e.id }}</span></td><td>{{ e.name }}</td><td class="small muted">{{ e.tactic }}</td>
+        <td>{{ e.findings }}</td><td>{{ e.asset_count }}</td><td>{{ e.max_severity|sev }}</td>
+      </tr>
+    {% else %}<tr><td colspan="6" class="empty">No techniques observed yet.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

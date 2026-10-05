@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }}{% endblock %}
+{% block content %}
+<div class="panel pad empty">
+  <div class="ico" style="display:flex;justify-content:center">{{ icon('alert') }}</div>
+  <h2>{{ code }}</h2>
+  <p class="muted">{{ msg }}</p>
+  <a class="btn primary mt" href="{{ url_for('ui.dashboard') }}">Back to dashboard</a>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Assets{% endblock %}
+{% block heading %}Asset Inventory{% endblock %}
+{% block crumb %}{{ assets|length }} assets in scope{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="panel-h"><h3>Assets</h3>
+    <div class="search">{{ icon('search','ico') }}<input id="af" onkeyup="Sentinel.filterTable('af','atbl')" placeholder="Filter assets…"/></div></div>
+  <div class="table-wrap"><table id="atbl">
+    <thead><tr><th>Hostname</th><th>IP</th><th>Type</th><th>Open Ports</th><th>Risk</th><th>Findings</th><th>MITRE</th><th>Last Audit</th></tr></thead>
+    <tbody>
+    {% for a in assets %}
+      <tr>
+        <td><b>{{ a.hostname }}</b></td>
+        <td>{{ a.ip or '—' }}</td>
+        <td><span class="chip">{{ a.asset_type }}</span></td>
+        <td class="small">{% for p in a.open_ports[:8] %}<span class="tag plain">{{ p }}</span> {% endfor %}{% if a.open_ports|length>8 %}+{{ a.open_ports|length-8 }}{% endif %}{% if not a.open_ports %}—{% endif %}</td>
+        <td><span class="meter" style="width:70px;display:inline-block;vertical-align:middle"><span style="width:{{ a.risk_score }}%;background:{{ '#dc2626' if a.risk_score>=40 else ('#d97706' if a.risk_score>=15 else '#16a34a') }}"></span></span> <span class="small">{{ a.risk_score }}</span></td>
+        <td>{{ a.finding_count }}</td>
+        <td class="small">{{ a.mitre_techniques|length }} tech</td>
+        <td class="small muted">{{ a.last_audit|ago }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="8" class="empty">No assets discovered yet. Run an assessment against a target to populate the inventory.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

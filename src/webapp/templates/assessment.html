@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Security Assessment{% endblock %}
+{% block heading %}Security Assessment{% endblock %}
+{% block crumb %}{{ stats.total }} modules · {{ stats.implemented }} with live collectors · {{ stats.planned }} planned{% endblock %}
+{% block content %}
+
+<div class="grid g-4 mb">
+  <div class="kpi accent"><div class="label">Modules</div><div class="val">{{ stats.total }}</div><div class="sub">catalogued</div></div>
+  <div class="kpi ok"><div class="label">Live Collectors</div><div class="val">{{ stats.implemented }}</div><div class="sub">produce real findings</div></div>
+  <div class="kpi"><div class="label">Planned</div><div class="val">{{ stats.planned }}</div><div class="sub">framework ready, collector pending</div></div>
+  <div class="kpi"><div class="label">Findings</div><div class="val">{{ d.summary.TOTAL or 0 }}</div><div class="sub">last assessment</div></div>
+</div>
+
+<div class="notice mb">Each module is part of the shared audit engine. Modules marked <b>PLANNED</b> have their full data model, MITRE mapping and UI in place, but no live collector yet — they show an honest empty state instead of fabricated results.</div>
+
+{% for group in GROUPS %}
+  {% set mods = groups.get(group, []) %}
+  {% if mods %}
+  <div class="panel mb">
+    <div class="panel-h"><h3>{{ group }}</h3><span class="muted small">{{ mods|length }} modules</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Module</th><th>Status</th><th>Findings</th><th>Highest</th><th>MITRE</th><th></th></tr></thead>
+      <tbody>
+      {% for m in mods %}
+      {% set pm = per_mod.get(m.key) %}
+      <tr onclick="location.href='{{ url_for('ui.module', key=m.key) }}'" style="cursor:pointer">
+        <td><b>{{ m.name }}</b><div class="muted small">{{ m.description }}</div></td>
+        <td>{% if m.collector %}<span class="badge sev-OK"><span class="dot"></span>IMPLEMENTED</span>{% else %}<span class="chip">PLANNED</span>{% endif %}</td>
+        <td>{{ pm.total if pm else 0 }}</td>
+        <td>{% if pm %}{{ pm.max | sev }}{% else %}<span class="muted small">—</span>{% endif %}</td>
+        <td>{% for t in m.mitre[:3] %}<span class="tag">{{ t }}</span> {% endfor %}</td>
+        <td class="right"><span class="muted">→</span></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+  {% endif %}
+{% endfor %}
+{% endblock %}

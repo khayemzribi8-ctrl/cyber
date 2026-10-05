@@ -1,0 +1,40 @@
+# ============================================================================
+# Sentinel Security Assessment Platform — dependencies
+#
+# The CORE platform (web dashboard, audit engine, MITRE mapping, scoring,
+# SQLite store, network exposure scanner, reports) runs on the Flask/Jinja2
+# stack ALONE and works fully OFFLINE. Everything below "OPTIONAL" enables
+# extra collectors/integrations and is imported lazily — the app starts and
+# runs without them.
+# ============================================================================
+
+# --- CORE (required) ---------------------------------------------------------
+Flask==3.0.3
+Jinja2==3.1.4
+
+# --- OPTIONAL: Active Directory / LDAP collectors ----------------------------
+ldap3==2.9.1
+
+# --- OPTIONAL: SSH / Windows-over-SSH collectors -----------------------------
+paramiko==3.5.0
+asyncssh==2.14.2
+
+# --- OPTIONAL: Windows Remote Execution (remediation over WinRM) -------------
+pywinrm==0.4.3
+
+# --- OPTIONAL: AWS integration (IAM audit, DynamoDB history, CloudWatch, SNS)-
+# AWS is entirely optional and never blocks startup.
+boto3==1.34.162
+
+# --- OPTIONAL: data export helpers -------------------------------------------
+pandas==2.2.2
+requests==2.31.0
+
+# --- OPTIONAL: AI advisory (Gemini) ------------------------------------------
+google-generativeai==0.8.3
+
+# --- OPTIONAL: PDF report export ---------------------------------------------
+weasyprint==62.2
+
+# --- OPTIONAL: load .env automatically ---------------------------------------
+python-dotenv==1.0.1

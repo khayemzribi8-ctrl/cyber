@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ tech.id }}{% endblock %}
+{% block heading %}{{ tech.id }} — {{ tech.name }}{% endblock %}
+{% block crumb %}Tactic: {{ tech.tactic }}{% if tech.parent %} · sub-technique of {{ tech.parent }}{% endif %}{% endblock %}
+{% block content %}
+<div class="panel pad mb flex between wrap">
+  <div><span class="tag">{{ tech.id }}</span> <b>{{ tech.name }}</b>
+    <div class="muted small mt">Tactic: {{ tech.tactic }}{% if tech.also_tactics %} (also {{ tech.also_tactics|join(', ') }}){% endif %}</div>
+  </div>
+  {% if tech.url %}<a class="btn sm" href="{{ tech.url }}" target="_blank" rel="noopener">ATT&amp;CK reference ↗</a>{% endif %}
+</div>
+
+<div class="grid g-2 mb">
+  <div class="panel"><div class="panel-h"><h3>Related findings</h3><span class="muted small">{{ related|length }}</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Severity</th><th>Finding</th><th>Asset</th><th>Confidence</th></tr></thead>
+      <tbody>
+      {% for f in related %}
+        <tr onclick="location.href='{{ url_for('ui.finding_detail', fid=f.id) }}'" style="cursor:pointer">
+          <td>{{ f.severity|sev }}</td><td>{{ f.title }}</td><td>{{ f.asset or '—' }}</td>
+          <td class="small">{% for m in f.mitre if m.technique_id==tech.id %}{{ m.confidence }}{% endfor %}</td>
+        </tr>
+      {% else %}<tr><td colspan="4" class="empty">No findings currently map to this technique.</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+  <div class="panel"><div class="panel-h"><h3>Affected assets</h3></div>
+    <div class="panel-b flex wrap">
+      {% for a in assets %}<span class="chip">{{ a }}</span>{% else %}<span class="muted small">None.</span>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

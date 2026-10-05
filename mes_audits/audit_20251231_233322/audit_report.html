@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Rapport d'audit CyberAudit</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="max-w-4xl mx-auto p-8 bg-white shadow-lg mt-10 rounded-lg">
+    <h1 class="text-4xl font-bold text-center text-blue-800 mb-8">Rapport d'Audit CyberAudit</h1>
+    <p class="text-center text-gray-600 mb-10">Généré le 31 December 2025 à 22:33</p>
+
+    
+      <h2 class="text-2xl font-bold text-gray-800 mt-12 mb-6 border-b-2 border-gray-300 pb-2">LDAP Findings</h2>
+      
+        <div class="space-y-4">
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-green-600 bg-green-50">
+              <h3 class="font-bold text-lg">Total user accounts</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-green-600">
+                  OK
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> 16</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Ensure regular review of user accounts.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-yellow-600 bg-yellow-50
+              ">
+              <h3 class="font-bold text-lg">Users with Password Never Expires</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-yellow-600
+                  ">
+                  WARN
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> Administrator</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Disable 'Password Never Expires' for these users.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-blue-600 bg-blue-50
+              ">
+              <h3 class="font-bold text-lg">Disabled accounts</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-blue-600
+                  ">
+                  INFO
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> Guest, krbtgt, Bob, TestUser</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Remove or review disabled accounts periodically.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-green-600 bg-green-50">
+              <h3 class="font-bold text-lg">Total groups</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-green-600">
+                  OK
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> 53</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Review group memberships for least privilege.</p>
+              
+            </div>
+          
+        </div>
+      
+    
+      <h2 class="text-2xl font-bold text-gray-800 mt-12 mb-6 border-b-2 border-gray-300 pb-2">SSH Findings</h2>
+      
+        <div class="space-y-4">
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-green-600 bg-green-50">
+              <h3 class="font-bold text-lg">PermitRootLogin</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-green-600">
+                  OK
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> prohibit-password</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Set 'PermitRootLogin no' to disable remote root login.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-yellow-600 bg-yellow-50
+              ">
+              <h3 class="font-bold text-lg">PasswordAuthentication</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-yellow-600
+                  ">
+                  WARN
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> yes</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Disable password authentication; use key-based authentication.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-green-600 bg-green-50">
+              <h3 class="font-bold text-lg">SSH Protocol Version</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-green-600">
+                  OK
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> 2</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Use Protocol 2 only.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-green-600 bg-green-50">
+              <h3 class="font-bold text-lg">Login Banner (User: Bob)</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-green-600">
+                  OK
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> C:\ProgramData\ssh\login_banner.txt</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Personalized banner configured for user 'Bob'.</p>
+              
+            </div>
+          
+        </div>
+      
+    
+      <h2 class="text-2xl font-bold text-gray-800 mt-12 mb-6 border-b-2 border-gray-300 pb-2">Active Directory Findings</h2>
+      
+        <div class="space-y-4">
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-green-600 bg-green-50">
+              <h3 class="font-bold text-lg">Domain Admins membership</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-green-600">
+                  OK
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> 2 comptes</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Limiter les comptes privilégiés → Principe du moindre privilège.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-green-600 bg-green-50">
+              <h3 class="font-bold text-lg">Enterprise Admins membership</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-green-600">
+                  OK
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> 1 comptes</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Limiter les comptes privilégiés → Principe du moindre privilège.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-green-600 bg-green-50">
+              <h3 class="font-bold text-lg">Schema Admins membership</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-green-600">
+                  OK
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> 1 comptes</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Limiter les comptes privilégiés → Principe du moindre privilège.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-green-600 bg-green-50">
+              <h3 class="font-bold text-lg">Administrators membership</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-green-600">
+                  OK
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> 3 comptes</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Limiter les comptes privilégiés → Principe du moindre privilège.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-green-600 bg-green-50">
+              <h3 class="font-bold text-lg">Backup Operators membership</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-green-600">
+                  OK
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> 0 comptes</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Limiter les comptes privilégiés → Principe du moindre privilège.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-green-600 bg-green-50">
+              <h3 class="font-bold text-lg">Account Operators membership</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-green-600">
+                  OK
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> 0 comptes</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Limiter les comptes privilégiés → Principe du moindre privilège.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-blue-600 bg-blue-50
+              ">
+              <h3 class="font-bold text-lg">Comptes désactivés</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-blue-600
+                  ">
+                  INFO
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> Guest, krbtgt, Bob, TestUser</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Supprimer les comptes désactivés non nécessaires.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-yellow-600 bg-yellow-50
+              ">
+              <h3 class="font-bold text-lg">Password Never Expires</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-yellow-600
+                  ">
+                  WARN
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> Administrator</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Désactiver 'PasswordNeverExpires'.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-yellow-600 bg-yellow-50
+              ">
+              <h3 class="font-bold text-lg">Compte sans expiration</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-yellow-600
+                  ">
+                  WARN
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> 16 comptes détectés</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-red-600 bg-red-50
+              ">
+              <h3 class="font-bold text-lg">Kerberos Pre-Auth désactivé</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-red-600
+                  ">
+                  CRIT
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> User_NoKrb</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Activer Kerberos Pre-Auth pour éviter AS-REP Roasting.</p>
+              
+            </div>
+          
+            <div class="p-6 rounded-lg border-l-4
+              border-green-600 bg-green-50">
+              <h3 class="font-bold text-lg">Comptes inactifs (> 90 jours)</h3>
+              <p class="mt-2"><strong>Gravité :</strong> 
+                <span class="px-3 py-1 rounded text-white
+                  bg-green-600">
+                  OK
+                </span>
+              </p>
+              <p class="mt-2"><strong>Résultat :</strong> Aucun</p>
+              
+                <p class="mt-3 text-sm italic text-gray-700"><strong>Recommandation :</strong> Désactiver les comptes inactifs ou appliquer une politique lifecycle.</p>
+              
+            </div>
+          
+        </div>
+      
+    
+
+    <footer class="mt-16 text-center text-gray-500 text-sm">
+      Rapport généré par CyberAudit — Ghassen Tekaya — 2025
+    </footer>
+  </div>
+</body>
+</html>

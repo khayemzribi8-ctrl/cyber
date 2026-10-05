@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Network Exposure{% endblock %}
+{% block heading %}Network Exposure{% endblock %}
+{% block crumb %}TCP connect scan results · live collector{% endblock %}
+{% block content %}
+<div class="notice mb">The network exposure scanner performs a real TCP connect scan of the target. A port is reported only when the handshake actually completes.</div>
+<div class="panel">
+  <div class="panel-h"><h3>Reachable services</h3>
+    <div class="search">{{ icon('search','ico') }}<input id="nf" onkeyup="Sentinel.filterTable('nf','ntbl')" placeholder="Filter…"/></div></div>
+  <div class="table-wrap"><table id="ntbl">
+    <thead><tr><th>Host</th><th>Port</th><th>Service</th><th>Exposure</th><th>Finding</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr onclick="location.href='{{ url_for('ui.finding_detail', fid=r.finding.id) }}'" style="cursor:pointer">
+        <td><b>{{ r.host }}</b></td>
+        <td class="mono">{{ r.port or '—' }}</td>
+        <td>{{ r.service }}</td>
+        <td>{{ r.severity|sev }}</td>
+        <td class="small muted">{{ r.finding.title }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5" class="empty">No network exposure findings. Run the Network Exposure collector against a target.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

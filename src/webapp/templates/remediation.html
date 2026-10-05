@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Remediation{% endblock %}
+{% block heading %}Remediation Center{% endblock %}
+{% block crumb %}{{ items|length }} remediable findings{% endblock %}
+{% block content %}
+<div class="notice warn mb">Remediation commands are always shown before execution. Only allow-listed, idempotent hardening commands can be executed, and only by ADMIN users after confirmation. Destructive changes are never run automatically.</div>
+
+{% for it in items %}
+<div class="panel mb">
+  <div class="panel-h">
+    <div class="flex">{{ it.finding.severity|sev }} <b>{{ it.problem }}</b></div>
+    <div class="flex">
+      {% if it.auto_fixable %}<span class="badge sev-OK"><span class="dot"></span>ALLOW-LISTED</span>
+      {% elif it.has_command %}<span class="chip">manual review</span>{% endif %}
+      <a class="btn sm" href="{{ url_for('ui.finding_detail', fid=it.finding.id) }}">Open</a>
+    </div>
+  </div>
+  <div class="panel-b">
+    <div class="grid g-2">
+      <div>
+        <label class="fld">Impact</label><p class="small">{{ it.impact or '—' }}</p>
+        <label class="fld mt">Recommended fix</label><p class="small">{{ it.fix_description }}</p>
+        <div class="flex mt"><span class="chip">Risk before: {{ it.risk_before }}</span><span class="chip">Risk after: {{ it.risk_after }}</span></div>
+      </div>
+      <div>
+        {% if it.command %}
+          <div class="flex between"><label class="fld">{{ 'Command' if not it.guidance_only else 'Suggested command (manual)' }}</label><button class="btn sm" onclick="Sentinel.copy('cmd_{{ it.finding.id }}')">{{ icon('copy') }} Copy</button></div>
+          <pre class="code" id="cmd_{{ it.finding.id }}">{{ it.command }}</pre>
+          {% if can('execute_fix') and it.auto_fixable %}
+          <div class="flex mt">
+            {% if it.channel == 'aws' %}
+            <button class="btn danger sm" onclick="Sentinel.execFix('{{ it.finding.id }}','aws',this)">Execute via AWS</button>
+            {% else %}
+            <button class="btn danger sm" onclick="Sentinel.execFix('{{ it.finding.id }}','winrm',this)">Execute via WinRM</button>
+            <button class="btn sm" onclick="Sentinel.execFix('{{ it.finding.id }}','ssh',this)">via SSH</button>
+            {% endif %}
+          </div>
+          <pre class="code mt" id="exec_{{ it.finding.id }}" style="display:none"></pre>
+          {% elif it.guidance_only %}
+          <div class="muted small mt">Guidance only (destructive or environment-specific) — apply manually after review.</div>
+          {% else %}
+          <div class="muted small mt">Vetted command shown — apply manually{{ ' (execution requires ADMIN)' if not can('execute_fix') }}.</div>
+          {% endif %}
+        {% else %}
+          <div class="muted small">No scripted remediation for this finding.</div>
+        {% endif %}
+        {% if can('preview_fix') and (it.guidance_only or not it.command) %}
+          <div class="mt"><button class="btn sm" onclick="Sentinel.aiSuggest('{{ it.finding.id }}',this)">{{ icon('search') }} AI suggest fix</button></div>
+          <div id="ai_{{ it.finding.id }}" class="mt" style="display:none"></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="panel pad empty"><p>No remediable findings — either nothing was found, or all issues are resolved.</p></div>
+{% endfor %}
+{% endblock %}

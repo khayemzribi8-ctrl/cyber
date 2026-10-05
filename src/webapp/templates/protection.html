@@ -1,0 +1,129 @@
+{% extends "base.html" %} 
+{% block content %}
+
+<!-- HEADER -->
+<div class="bg-white p-6 rounded-lg shadow mb-8">
+  <h2 class="text-3xl font-semibold mb-2 flex items-center gap-2">
+    🛡️ Module de Protection
+  </h2>
+  <p class="text-gray-600 text-lg">
+    Correctifs générés automatiquement selon l’audit.
+    <br />⚠️ Exécution manuelle requise par un administrateur.
+  </p>
+</div>
+
+<!-- GRID -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <!-- SSH FIXES -->
+  <div class="bg-white p-6 rounded-lg shadow relative">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-2xl font-semibold">🔐 Correctifs SSH</h3>
+      <div class="flex gap-3">
+        <button onclick="copyToClipboard('sshScript')"
+          class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm">
+          Copier
+        </button>
+        <button onclick="downloadScript('sshScript','ssh_fixes.ps1')"
+          class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-800 transition text-sm">
+          Télécharger
+        </button>
+      </div>
+    </div>
+
+    <pre id="sshScript"
+      class="bg-gray-900 text-green-300 p-4 rounded-lg overflow-auto text-sm shadow-inner max-h-96">
+{{ ssh_script }}
+    </pre>
+  </div>
+
+  <!-- LDAP / AD FIXES -->
+  <div class="bg-white p-6 rounded-lg shadow relative">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-2xl font-semibold">🏢 Correctifs LDAP / Active Directory</h3>
+      <div class="flex gap-3">
+        <button onclick="copyToClipboard('ldapScript')"
+          class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm">
+          Copier
+        </button>
+        <button onclick="downloadScript('ldapScript','ldap_ad_fixes.ps1')"
+          class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-800 transition text-sm">
+          Télécharger
+        </button>
+      </div>
+    </div>
+
+    <pre id="ldapScript"
+      class="bg-gray-900 text-green-300 p-4 rounded-lg overflow-auto text-sm shadow-inner max-h-96">
+{{ ldap_ad_script }}
+    </pre>
+  </div>
+</div>
+
+<!-- AI SUGGESTIONS -->
+<div class="bg-white p-6 rounded-lg shadow mt-8 relative">
+  <h3 class="text-2xl font-semibold mb-4 flex items-center gap-2">
+    🤖 Suggestions avancées par IA (Gemini)
+  </h3>
+
+  <!-- LOADER -->
+  <div id="aiLoader"
+       class="flex items-center justify-center bg-gray-100 p-6 rounded-lg mb-4">
+    <div class="flex items-center gap-3 text-gray-700">
+      <span class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></span>
+      <span class="font-semibold">Analyse IA en cours…</span>
+    </div>
+  </div>
+
+  <div class="flex justify-between items-center">
+    <p class="italic text-gray-600 mb-4">
+      Analyse intelligente basée sur vos correctifs.
+    </p>
+    <button onclick="copyToClipboard('aiBox')"
+      class="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition text-sm">
+      Copier
+    </button>
+  </div>
+
+  <pre id="aiBox"
+    class="hidden whitespace-pre-wrap bg-gray-900 text-green-300 p-6 rounded-xl border border-gray-700 
+           text-base leading-relaxed font-mono shadow-inner max-h-[600px] overflow-auto">
+  </pre>
+</div>
+
+<!-- JS -->
+<script>
+function copyToClipboard(id) {
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(() => alert("Copié !"));
+}
+
+function downloadScript(id, filename) {
+  const content = document.getElementById(id).innerText;
+  const blob = new Blob([content], { type: "text/plain" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+}
+
+/* 🔥 ASYNC GEMINI LOAD */
+document.addEventListener("DOMContentLoaded", () => {
+  fetch("/ai-generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ssh: document.getElementById("sshScript").innerText,
+      ldap: document.getElementById("ldapScript").innerText
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById("aiLoader").style.display = "none";
+    const box = document.getElementById("aiBox");
+    box.innerText = d.text;
+    box.classList.remove("hidden");
+  });
+});
+</script>
+
+{% endblock %}

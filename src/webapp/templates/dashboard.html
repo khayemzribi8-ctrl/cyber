@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Executive Security Dashboard{% endblock %}
+{% block crumb %}
+  {% if d.audit %}Last audit {{ d.audit.finished_at | ago }} · target {{ d.audit.target or '—' }}{% if d.audit.demo %} · <span class="demo-flag">DEMO DATA</span>{% endif %}
+  {% else %}No assessment has been run yet{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if not d.has_data %}
+<div class="notice mb">No audit data yet. Click <b>Run Assessment</b> to launch the audit engine, or load the demo dataset with <code>python -m src.seed_demo</code>. The dashboard never shows fabricated findings.</div>
+{% endif %}
+
+<!-- KPI row -->
+<div class="grid g-4 mb">
+  {% for label, val, sub, cls in kpis %}
+  <div class="kpi {{ cls }}">
+    <div class="label">{{ label }}</div>
+    <div class="val">{{ val }}{% if label == 'Security Score' %}<span class="grade" style="margin-left:8px;vertical-align:middle">{{ sub }}</span>{% endif %}</div>
+    {% if label != 'Security Score' %}<div class="sub">{{ sub }}</div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<div class="grid g-3 mb">
+  <!-- score + breakdown -->
+  <div class="panel">
+    <div class="panel-h"><h3>Security Score</h3><span class="muted small">transparent scoring</span></div>
+    <div class="panel-b">
+      <div class="score-wrap">
+        <div>{{ gauge | safe }}</div>
+        <div style="flex:1">
+          {% for b in d.score.breakdown %}
+          <div class="flex between small" style="padding:3px 0">
+            <span class="muted">{{ b.label }}{% if b.capped %} <span class="t-id">(capped)</span>{% endif %}</span>
+            <b style="color:{{ '#16a34a' if b.delta>=0 else '#dc2626' }}">{{ '+' if b.delta>=0 else '' }}{{ b.delta }}</b>
+          </div>
+          {% else %}
+          <div class="muted small">No penalties — clean baseline.</div>
+          {% endfor %}
+          <div class="flex between mt" style="border-top:1px solid var(--border);padding-top:8px">
+            <b>Score</b><b>{{ d.score.score }} / 100 · {{ d.score.grade }}</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- risk distribution -->
+  <div class="panel">
+    <div class="panel-h"><h3>Risk Distribution</h3></div>
+    <div class="panel-b flex" style="gap:18px">
+      <div>{{ donut | safe }}</div>
+      <div style="flex:1">
+        {% for k in ['CRITICAL','HIGH','MEDIUM','LOW','INFO'] %}
+        <div class="flex between" style="padding:3px 0">
+          <span>{{ k | sev }}</span><b>{{ d.summary.get(k,0) }}</b>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- security posture -->
+  <div class="panel">
+    <div class="panel-h"><h3>Security Posture</h3></div>
+    <div class="panel-b">{{ posture_bars | safe }}</div>
+  </div>
+</div>
+
+<div class="grid g-3 mb">
+  <!-- findings trend -->
+  <div class="panel">
+    <div class="panel-h"><h3>Score Trend</h3><span class="muted small">last {{ (d.summary.TOTAL or 0) and 30 or 0 }} audits</span></div>
+    <div class="panel-b">{{ spark | safe }}<div class="muted small mt">Security score across recent assessments.</div></div>
+  </div>
+  <!-- MITRE coverage -->
+  <div class="panel">
+    <div class="panel-h"><h3>MITRE ATT&amp;CK Coverage</h3><a class="small" href="{{ url_for('ui.mitre') }}">Open matrix →</a></div>
+    <div class="panel-b">
+      <div class="score-wrap">
+        <div class="score-num" style="color:var(--accent)">{{ coverage.observed_count }}</div>
+        <div>
+          <div class="muted small">techniques observed of {{ coverage.total_techniques }} tracked</div>
+          <div class="meter mt" style="width:180px"><span style="width:{{ coverage.coverage_pct }}%;background:var(--accent)"></span></div>
+          <div class="muted small mt">{{ coverage.tactic_count }} tactics · {{ coverage.coverage_pct }}% coverage</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- attack surface -->
+  <div class="panel">
+    <div class="panel-h"><h3>Attack Surface</h3><a class="small" href="{{ url_for('ui.attack_surface') }}">Details →</a></div>
+    <div class="panel-b">
+      <div class="kv">
+        <span class="k">Assets</span><span>{{ d.assets | length }}</span>
+        <span class="k">Exposed admin services</span><span>{{ d.score.exposed_admin_services }}</span>
+        <span class="k">Open findings</span><span>{{ d.summary.get('OPEN',0) }}</span>
+        <span class="k">Attack paths</span><span>{{ attack_paths | length }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- recent findings -->
+<div class="panel mb">
+  <div class="panel-h"><h3>Recent Findings</h3><a class="small" href="{{ url_for('ui.findings') }}">All findings →</a></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>ID</th><th>Severity</th><th>Finding</th><th>Asset</th><th>Category</th><th>MITRE</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for f in recent %}
+        <tr onclick="location.href='{{ url_for('ui.finding_detail', fid=f.id) }}'" style="cursor:pointer">
+          <td class="t-id">{{ f.id }}</td>
+          <td>{{ f.severity | sev }}</td>
+          <td>{{ f.title }}</td>
+          <td>{{ f.asset or '—' }}</td>
+          <td class="small muted">{{ f.category }}</td>
+          <td>{% for m in f.mitre[:2] %}<span class="tag">{{ m.technique_id }}</span> {% endfor %}</td>
+          <td>{{ f.status | status }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7" class="empty">No findings to display.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- collector status -->
+<div class="panel">
+  <div class="panel-h"><h3>Collector / Integration Status</h3></div>
+  <div class="panel-b grid g-3">
+    {% for c in collectors %}
+    <div class="flex between" style="padding:6px 0">
+      <span>{{ c.label }} <span class="t-id">{{ c.key }}</span></span>
+      {% if c.available %}<span class="badge sev-OK"><span class="dot"></span>READY</span>
+      {% else %}<span class="chip" title="{{ c.reason }}">unavailable</span>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

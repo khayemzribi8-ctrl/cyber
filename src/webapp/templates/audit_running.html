@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Assessment Running{% endblock %}
+{% block heading %}Assessment Running…{% endblock %}
+{% block topactions %}{% endblock %}
+{% block content %}
+<div class="panel pad mb">
+  <div class="flex between"><h3>Audit pipeline</h3><b id="ppct">0%</b></div>
+  <div class="progress"><span id="pbar" style="width:0%"></span></div>
+  <div class="pipe">
+    {% for s in pipeline %}
+    <div class="stg pending" data-stage="{{ s }}"><span class="s"></span>{{ s }}</div>
+    {% endfor %}
+  </div>
+  <p class="muted small mt">The engine runs each collector, normalizes findings, maps MITRE ATT&amp;CK techniques, calculates the risk score and persists the result. You will be redirected to the dashboard when it completes.</p>
+</div>
+{% endblock %}
+{% block scripts %}<script>Sentinel.pollAudit("{{ token }}");</script>{% endblock %}

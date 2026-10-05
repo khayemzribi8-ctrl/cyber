@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{% block title %}Dashboard{% endblock %} · Sentinel Security Platform</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%234f46e5' d='M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z'/></svg>"/>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="logo">{{ icon('shield') }}</span>
+      <span class="name">Sentinel<small>Security Assessment Platform</small></span>
+    </div>
+    <nav class="nav">
+      {% for item in NAV %}
+        {% if item.section %}
+          <div class="section">{{ item.section }}</div>
+        {% else %}
+          {% set href = url_for(item.endpoint, key=item.arg) if item.arg else url_for(item.endpoint) %}
+          {% set is_active = (request.endpoint == item.endpoint) and ((not item.arg) or (request.view_args and request.view_args.get('key') == item.arg)) %}
+          <a href="{{ href }}" class="{{ 'active' if is_active else '' }}">
+            <span class="ico">{{ icon(item.icon) }}</span>{{ item.label }}
+          </a>
+        {% endif %}
+      {% endfor %}
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">{{ icon('menu') }}</button>
+      <div>
+        <h1>{% block heading %}{{ self.title() }}{% endblock %}</h1>
+        <div class="crumb">{% block crumb %}{% endblock %}</div>
+      </div>
+      <div class="spacer"></div>
+      {% block topactions %}
+        {% if can('run_audit') %}
+        <button class="btn primary" onclick="Sentinel.openRun()">{{ icon('play') }} Run Assessment</button>
+        {% endif %}
+      {% endblock %}
+      <div class="flex" style="gap:8px">
+        <span class="chip" title="Role">{{ icon('user') }} {{ current_user.username }} · {{ current_role }}</span>
+        <form method="post" action="{{ url_for('auth.logout') }}"><button class="btn sm" title="Sign out">{{ icon('logout') }}</button></form>
+      </div>
+    </header>
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<!-- Run assessment modal -->
+<div class="modal-back" id="runModal">
+  <div class="modal">
+    <div class="m-h"><h3>Run Security Assessment</h3><button class="btn sm" onclick="Sentinel.closeRun()">✕</button></div>
+    <form method="post" action="{{ url_for('ui.run_audit_route') }}">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+      <div class="m-b">
+        <label class="fld">Target host / IP (for network & remote checks)</label>
+        <input name="target" placeholder="e.g. 10.0.0.10 or dc01.corp.local"/>
+        <div class="notice mt small">The audit engine runs only the modules whose collectors are available and configured. Unavailable integrations are skipped and clearly marked — no results are fabricated.</div>
+        <label class="fld" style="margin-top:14px">Modules</label>
+        <div id="moduleChecks" class="grid g-2"></div>
+      </div>
+      <div class="m-f">
+        <button type="button" class="btn" onclick="Sentinel.closeRun()">Cancel</button>
+        <button class="btn primary">{{ icon('play') }} Start Assessment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script>
+  window.__COLLECTORS__ = {{ all_collectors_ctx | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

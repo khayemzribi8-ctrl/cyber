@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Security Findings{% endblock %}
+{% block heading %}Security Findings{% endblock %}
+{% block crumb %}{{ items|length }} shown of {{ d.summary.TOTAL or 0 }} total{% endblock %}
+{% block content %}
+
+<form class="filter-bar mb" method="get">
+  <div class="search">{{ icon('search','ico') }}<input name="q" value="{{ q }}" placeholder="Search findings, assets…"/></div>
+  <select name="severity" onchange="this.form.submit()">
+    <option value="">All severities</option>
+    {% for s in SEVERITIES %}<option value="{{ s }}" {{ 'selected' if sev==s }}>{{ s }}</option>{% endfor %}
+  </select>
+  <select name="status" onchange="this.form.submit()">
+    <option value="">All statuses</option>
+    {% for s in STATUSES %}<option value="{{ s }}" {{ 'selected' if status==s }}>{{ s.replace('_',' ') }}</option>{% endfor %}
+  </select>
+  <select name="module" onchange="this.form.submit()">
+    <option value="">All modules</option>
+    {% for m in mods %}<option value="{{ m }}" {{ 'selected' if module_f==m }}>{{ m }}</option>{% endfor %}
+  </select>
+  <button class="btn sm">Filter</button>
+  {% if sev or status or module_f or q %}<a class="btn sm" href="{{ url_for('ui.findings') }}">Clear</a>{% endif %}
+</form>
+
+<div class="panel">
+  <div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Severity</th><th>Finding</th><th>Asset</th><th>Category</th><th>MITRE</th><th>Confidence</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for f in items %}
+      <tr onclick="location.href='{{ url_for('ui.finding_detail', fid=f.id) }}'" style="cursor:pointer">
+        <td class="t-id">{{ f.id }}</td>
+        <td>{{ f.severity|sev }}</td>
+        <td>{{ f.title }}{% if f.affected %}<div class="muted small">{{ f.affected[:4]|join(', ') }}{% if f.affected|length>4 %} +{{ f.affected|length-4 }}{% endif %}</div>{% endif %}</td>
+        <td>{{ f.asset or '—' }}</td>
+        <td class="small muted">{{ f.category }}</td>
+        <td>{% for m in f.mitre[:3] %}<span class="tag">{{ m.technique_id }}</span> {% endfor %}</td>
+        <td class="small">{{ f.confidence }}</td>
+        <td>{{ f.status|status }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="8" class="empty">No findings match the filters.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

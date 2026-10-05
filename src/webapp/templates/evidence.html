@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Evidence{% endblock %}
+{% block heading %}Evidence Center{% endblock %}
+{% block crumb %}{{ items|length }} evidence artefacts{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="panel-h"><h3>Collected evidence</h3>
+    <div class="search">{{ icon('search','ico') }}<input id="ef" onkeyup="Sentinel.filterTable('ef','etbl')" placeholder="Filter…"/></div></div>
+  <div class="table-wrap"><table id="etbl">
+    <thead><tr><th>Kind</th><th>Finding</th><th>Host</th><th>Source</th><th>Collected</th><th>Preview</th></tr></thead>
+    <tbody>
+    {% for it in items %}
+      <tr>
+        <td><span class="chip">{{ it.ev.kind }}</span></td>
+        <td><a href="{{ url_for('ui.finding_detail', fid=it.finding.id) }}">{{ it.finding.title|truncate(40) }}</a></td>
+        <td class="small">{{ it.ev.host or '—' }}</td>
+        <td class="small muted">{{ it.ev.source or it.finding.detection_source }}</td>
+        <td class="small muted">{{ it.ev.collected_at|dt }}</td>
+        <td class="small mono">{{ it.ev.content|truncate(60) }}</td>
+      </tr>
+    {% else %}<tr><td colspan="6" class="empty">No evidence recorded yet.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

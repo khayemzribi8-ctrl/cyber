@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}{{ f.id }}{% endblock %}
+{% block heading %}{{ f.title }}{% endblock %}
+{% block crumb %}<span class="t-id">{{ f.id }}</span> · {{ f.category }} · <a href="{{ url_for('ui.module', key=f.module) }}">{{ f.module }}</a>{% endblock %}
+{% block content %}
+
+<div class="flex between wrap mb">
+  <div class="flex wrap">
+    {{ f.severity|sev }} {{ f.status|status }}
+    <span class="chip">confidence: {{ f.confidence }}</span>
+    {% if f.cve %}<span class="chip">{{ f.cve }}{% if f.cvss %} · CVSS {{ f.cvss }}{% endif %}</span>{% endif %}
+  </div>
+  {% if can('change_status') %}
+  <div class="flex">
+    <select id="stsel">{% for s in STATUSES %}<option value="{{ s }}" {{ 'selected' if f.status==s }}>{{ s.replace('_',' ') }}</option>{% endfor %}</select>
+    <button class="btn sm primary" onclick="Sentinel.setStatus('{{ f.id }}', document.getElementById('stsel').value)">Update status</button>
+  </div>
+  {% endif %}
+</div>
+
+<div class="grid g-3 mb">
+  <div class="panel pad" style="grid-column:span 2">
+    <h3>Description</h3>
+    <p>{{ f.description or '—' }}</p>
+    {% if f.risk %}<h3 class="mt">Risk</h3><p>{{ f.risk }}</p>{% endif %}
+    {% if f.affected %}
+      <h3 class="mt">Affected ({{ f.affected|length }})</h3>
+      <div class="flex wrap">{% for a in f.affected %}<span class="chip">{{ a }}</span>{% endfor %}</div>
+    {% endif %}
+  </div>
+  <div class="panel pad">
+    <h3>Details</h3>
+    <div class="kv mt">
+      <span class="k">Asset</span><span>{{ f.asset or '—' }}</span>
+      <span class="k">Asset IP</span><span>{{ f.asset_ip or '—' }}</span>
+      <span class="k">Detection</span><span>{{ f.detection_source or '—' }}</span>
+      <span class="k">Signature</span><span class="t-id">{{ f.signature }}</span>
+      <span class="k">First seen</span><span>{{ f.first_seen|dt }}</span>
+      <span class="k">Last seen</span><span>{{ f.last_seen|dt }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="grid g-2 mb">
+  <div class="panel">
+    <div class="panel-h"><h3>MITRE ATT&amp;CK Mapping</h3></div>
+    <div class="panel-b">
+      {% for m in f.mitre %}
+      <div class="mb" style="border-bottom:1px solid var(--border);padding-bottom:8px">
+        <div class="flex between"><a class="tag" href="{{ url_for('ui.mitre_technique', tid=m.technique_id) }}">{{ m.technique_id }}</a><span class="chip">{{ m.confidence }}</span></div>
+        <div style="font-weight:600;margin-top:4px">{{ m.technique_name }}</div>
+        <div class="muted small">Tactic: {{ m.tactic }} · source: {{ m.source }}</div>
+        {% if m.rationale %}<div class="small mt">{{ m.rationale }}</div>{% endif %}
+      </div>
+      {% else %}<div class="muted small">No ATT&amp;CK technique is technically justified for this finding.</div>{% endfor %}
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-h"><h3>Compliance</h3></div>
+    <div class="panel-b">
+      {% for c in f.compliance %}
+      <div class="flex between" style="padding:4px 0;border-bottom:1px solid var(--border)">
+        <span><b>{{ c.control }}</b> <span class="muted small">{{ c.framework }}</span></span>
+      </div>
+      <div class="small muted" style="padding-bottom:6px">{{ c.requirement }}</div>
+      {% else %}<div class="muted small">No mapped controls.</div>{% endfor %}
+    </div>
+  </div>
+</div>
+
+{% if f.remediation %}
+<div class="panel mb">
+  <div class="panel-h"><h3>Remediation</h3>
+    <a class="small" href="{{ url_for('ui.remediation') }}">Remediation center →</a></div>
+  <div class="panel-b">
+    <p>{{ f.remediation.fix_description or f.remediation.summary }}</p>
+    <div class="flex mb"><span class="chip">Risk before: {{ f.severity }}</span> <span class="chip">Risk after: Low</span></div>
+    {% if f.remediation.powershell %}
+      <div class="flex between"><label class="fld">PowerShell</label><button class="btn sm" onclick="Sentinel.copy('ps_{{ f.id }}')">{{ icon('copy') }} Copy</button></div>
+      <pre class="code" id="ps_{{ f.id }}">{{ f.remediation.powershell }}</pre>
+    {% endif %}
+    {% if f.remediation.linux %}
+      <div class="flex between mt"><label class="fld">Linux</label><button class="btn sm" onclick="Sentinel.copy('lx_{{ f.id }}')">{{ icon('copy') }} Copy</button></div>
+      <pre class="code" id="lx_{{ f.id }}">{{ f.remediation.linux }}</pre>
+    {% endif %}
+    {% set is_aws = (f.category == 'Cloud') or f.signature.upper().startswith('AWS_') %}
+    {% if can('execute_fix') and (f.remediation.powershell or f.remediation.linux) and not f.remediation.powershell.strip().startswith('#') %}
+      <div class="flex mt">
+        {% if is_aws %}
+        <button class="btn danger sm" onclick="Sentinel.execFix('{{ f.id }}','aws',this)">Execute via AWS</button>
+        {% else %}
+        <button class="btn danger sm" onclick="Sentinel.execFix('{{ f.id }}','winrm',this)">Execute via WinRM</button>
+        <button class="btn sm" onclick="Sentinel.execFix('{{ f.id }}','ssh',this)">Execute via SSH</button>
+        {% endif %}
+        <span class="muted small">Only vetted/allow-listed commands run; you will be asked to confirm.</span>
+      </div>
+      <pre class="code mt" id="exec_{{ f.id }}" style="display:none"></pre>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="panel">
+  <div class="panel-h"><h3>Evidence</h3><span class="muted small">{{ f.evidence|length }} artefact(s)</span></div>
+  <div class="panel-b">
+    {% for e in f.evidence %}
+    <div class="mb">
+      <div class="flex between"><span class="chip">{{ e.kind }}</span><span class="muted small">{{ e.host }} · {{ e.collected_at|dt }}</span></div>
+      <pre class="code mt">{{ e.content }}</pre>
+    </div>
+    {% else %}<div class="muted small">No evidence artefacts recorded.</div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Attack Surface{% endblock %}
+{% block heading %}Attack Surface{% endblock %}
+{% block content %}
+<div class="grid g-4 mb">
+  <div class="kpi"><div class="label">Assets</div><div class="val">{{ assets|length }}</div></div>
+  <div class="kpi crit"><div class="label">Exposed admin services</div><div class="val">{{ exposed|length }}</div></div>
+  <div class="kpi"><div class="label">Open findings</div><div class="val">{{ d.summary.get('OPEN',0) }}</div></div>
+  <div class="kpi"><div class="label">MITRE techniques</div><div class="val">{{ d.coverage.observed_count }}</div></div>
+</div>
+<div class="panel">
+  <div class="panel-h"><h3>Exposed remote-administration services</h3></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Severity</th><th>Service</th><th>Asset</th><th>MITRE</th><th></th></tr></thead>
+    <tbody>
+    {% for f in exposed %}
+      <tr onclick="location.href='{{ url_for('ui.finding_detail', fid=f.id) }}'" style="cursor:pointer">
+        <td>{{ f.severity|sev }}</td><td>{{ f.title }}</td><td>{{ f.asset }}</td>
+        <td>{% for m in f.mitre %}<span class="tag">{{ m.technique_id }}</span> {% endfor %}</td>
+        <td class="right muted">→</td>
+      </tr>
+    {% else %}<tr><td colspan="5" class="empty">No exposed remote-admin services detected.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}
